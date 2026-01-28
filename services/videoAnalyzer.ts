@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import type { VideoFrame, Transcription } from '../types';
 
@@ -70,6 +71,7 @@ const formatTimestamp = (totalSeconds: number): string => {
 
 export const analyzeVideoForText = async (
     videoFile: File,
+    textModel: string,
     onProgress: (message: string, progress?: number) => void
 ): Promise<Transcription[]> => {
     onProgress('Extracting frames from video...', 0);
@@ -81,7 +83,7 @@ export const analyzeVideoForText = async (
         throw new Error('Could not extract any frames from the video.');
     }
 
-    onProgress('Analyzing frames with Gemini...', undefined);
+    onProgress(`Analyzing frames with ${textModel}...`, undefined);
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
     const prompt = `Your task is to extract text from a sequence of video frames.
@@ -104,7 +106,7 @@ Here are the frames:`;
     const textPart = { text: prompt };
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
+        model: textModel,
         contents: { parts: [textPart, ...imageParts] },
         config: {
             responseMimeType: 'application/json',

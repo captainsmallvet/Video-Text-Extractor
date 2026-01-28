@@ -28,6 +28,13 @@ const QUICK_EDIT_PROMPTS = {
 
 const REWRITE_SIZES = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
 
+const TEXT_REASONING_MODELS = [
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
+    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
+    { id: 'gemini-flash-latest', name: 'Gemini Flash Latest' },
+    { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite Latest' },
+];
+
 const App: React.FC = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [externalImageFile, setExternalImageFile] = useState<File | null>(null);
@@ -54,6 +61,7 @@ const App: React.FC = () => {
   const [isReWritingFromPopup, setIsReWritingFromPopup] = useState(false);
   
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [textModel, setTextModel] = useState('gemini-3-flash-preview');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +70,7 @@ const App: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reWritePopupRef = useRef<HTMLDivElement>(null);
 
-  // Initialize API Key from localStorage or process.env
+  // Initialize API Key and Model from localStorage or defaults
   useEffect(() => {
     const storedKey = localStorage.getItem('user_api_key');
     const envKey = process.env.API_KEY;
@@ -73,6 +81,11 @@ const App: React.FC = () => {
     // Set global API key if we have a stored one
     if (storedKey) {
         (process as any).env.API_KEY = storedKey;
+    }
+
+    const storedModel = localStorage.getItem('user_text_model');
+    if (storedModel) {
+        setTextModel(storedModel);
     }
   }, []);
 
@@ -94,6 +107,12 @@ const App: React.FC = () => {
     localStorage.removeItem('user_api_key');
     setApiKeyInput('no API key');
     (process as any).env.API_KEY = '';
+  };
+
+  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newModel = e.target.value;
+    setTextModel(newModel);
+    localStorage.setItem('user_text_model', newModel);
   };
 
   useEffect(() => {
@@ -225,7 +244,7 @@ const App: React.FC = () => {
     setProgress({ message: 'Starting analysis...' });
     
     try {
-      const results = await analyzeVideoForText(videoFile, (message, percentage) => {
+      const results = await analyzeVideoForText(videoFile, textModel, (message, percentage) => {
         setProgress({ message, percentage });
       });
       setTranscriptions(results);
@@ -235,7 +254,7 @@ const App: React.FC = () => {
       setError(err.message || 'An unknown error occurred during analysis.');
       setStatus('error');
     }
-  }, [videoFile]);
+  }, [videoFile, textModel]);
   
   const triggerFileSelect = () => fileInputRef.current?.click();
   const triggerImageFileSelect = () => imageInputRef.current?.click();
@@ -702,38 +721,51 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center font-sans">
-      {/* API Key Management Section */}
+      {/* API Key and Model Management Section */}
       <div className="w-full bg-black/40 border-b border-gray-700 p-2 text-xs font-mono sticky top-0 z-50 shadow-md">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <label className="text-gray-400 whitespace-nowrap">API Key :</label>
-              <div className="flex-1 w-full overflow-x-auto bg-gray-800 rounded px-2 h-8 flex items-center shadow-inner">
-                  <input
-                      type="text"
-                      value={apiKeyInput}
-                      onChange={(e) => setApiKeyInput(e.target.value)}
-                      className="bg-transparent border-none outline-none w-full text-gray-300 min-w-[300px] sm:min-w-[600px] py-1"
-                      placeholder="Enter API Key here..."
-                  />
-              </div>
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <button 
-                      onClick={handleSendApiKey}
-                      className="flex-1 sm:flex-none px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors font-semibold"
-                  >
-                      Send
-                  </button>
-                  <button 
-                      onClick={handleCopyApiKey}
-                      className="flex-1 sm:flex-none px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors font-semibold"
-                  >
-                      Copy
-                  </button>
-                  <button 
-                      onClick={handleClearApiKey}
-                      className="flex-1 sm:flex-none px-3 py-1 bg-red-900 text-white rounded hover:bg-red-800 transition-colors font-semibold"
-                  >
-                      Clear
-                  </button>
+                <label className="text-gray-400 whitespace-nowrap">API Key :</label>
+                <div className="flex-1 sm:w-64 overflow-x-auto bg-gray-800 rounded px-2 h-8 flex items-center shadow-inner">
+                    <input
+                        type="text"
+                        value={apiKeyInput}
+                        onChange={(e) => setApiKeyInput(e.target.value)}
+                        className="bg-transparent border-none outline-none w-full text-gray-300 min-w-[200px] py-1"
+                        placeholder="Enter API Key here..."
+                    />
+                </div>
+                <button 
+                    onClick={handleSendApiKey}
+                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors font-semibold"
+                >
+                    Send
+                </button>
+                <button 
+                    onClick={handleCopyApiKey}
+                    className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors font-semibold"
+                >
+                    Copy
+                </button>
+                <button 
+                    onClick={handleClearApiKey}
+                    className="px-3 py-1 bg-red-900 text-white rounded hover:bg-red-800 transition-colors font-semibold"
+                >
+                    Clear
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <label className="text-gray-400 whitespace-nowrap">Text Model :</label>
+                <select 
+                    value={textModel}
+                    onChange={handleModelChange}
+                    className="bg-gray-800 text-gray-300 rounded px-2 h-8 outline-none border border-gray-700 focus:border-blue-500 transition-colors font-sans text-xs"
+                >
+                    {TEXT_REASONING_MODELS.map(model => (
+                        <option key={model.id} value={model.id}>{model.name}</option>
+                    ))}
+                </select>
               </div>
           </div>
       </div>
@@ -747,8 +779,8 @@ const App: React.FC = () => {
                 </h1>
             </div>
             <p className="text-gray-400 max-w-2xl">
-                Upload a video, and Gemini Pro will extract the text from its frames.
-                The process can take several minutes depending on video length.
+                Upload a video, and Gemini will extract the text from its frames.
+                The process can take several minutes depending on video length and selected model.
             </p>
         </header>
 
