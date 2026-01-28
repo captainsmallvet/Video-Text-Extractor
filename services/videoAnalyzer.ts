@@ -137,7 +137,15 @@ Here are the frames:`;
     return formattedResults;
 };
 
-export const processFrameForTextExtraction = async (base64FrameData: string): Promise<string> => {
+/**
+ * Determines if a model supports the `imageConfig` (aspect ratio, etc.) based on standard naming conventions
+ * for the Nano Banana series models (Gemini 2.5 Flash Image, Gemini 3 Pro Image).
+ */
+const modelSupportsImageConfig = (model: string): boolean => {
+  return model.includes('image') || model.includes('2.5-flash') || model.includes('3-pro');
+};
+
+export const processFrameForTextExtraction = async (base64FrameData: string, imageModel: string): Promise<string> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
     const imagePart = {
@@ -156,14 +164,21 @@ export const processFrameForTextExtraction = async (base64FrameData: string): Pr
 - The final output image must ONLY contain the white text/numbers on the solid green background.`
     };
 
+    const config: any = {
+        responseModalities: [Modality.IMAGE],
+    };
+
+    // If the model is a Nano Banana series model, we can safely include imageConfig (e.g. aspectRatio)
+    if (modelSupportsImageConfig(imageModel)) {
+      config.imageConfig = { aspectRatio: "1:1" };
+    }
+
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: imageModel,
         contents: {
             parts: [imagePart, textPart],
         },
-        config: {
-            responseModalities: [Modality.IMAGE],
-        },
+        config: config,
     });
 
     // Safely access the response to prevent crashes on blocked content
@@ -181,7 +196,8 @@ export const processFrameForTextExtraction = async (base64FrameData: string): Pr
 export const editImage = async (
     base64ImageData: string,
     mimeType: string,
-    prompt: string
+    prompt: string,
+    imageModel: string
 ): Promise<string> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
@@ -196,14 +212,21 @@ export const editImage = async (
         text: prompt,
     };
 
+    const config: any = {
+        responseModalities: [Modality.IMAGE],
+    };
+
+    // If the model is a Nano Banana series model, we can safely include imageConfig (e.g. aspectRatio)
+    if (modelSupportsImageConfig(imageModel)) {
+      config.imageConfig = { aspectRatio: "1:1" };
+    }
+
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: imageModel,
         contents: {
             parts: [imagePart, textPart],
         },
-        config: {
-            responseModalities: [Modality.IMAGE],
-        },
+        config: config,
     });
 
     // Safely access the response to prevent crashes on blocked content

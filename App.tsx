@@ -35,6 +35,15 @@ const TEXT_REASONING_MODELS = [
     { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite Latest' },
 ];
 
+const IMAGE_GENERATION_MODELS = [
+    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image' },
+    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro Image' },
+    { id: 'gemini-flash-latest', name: 'Gemini Flash Latest' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
+    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
+    { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite Latest' },
+];
+
 const App: React.FC = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [externalImageFile, setExternalImageFile] = useState<File | null>(null);
@@ -62,6 +71,7 @@ const App: React.FC = () => {
   
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [textModel, setTextModel] = useState('gemini-3-flash-preview');
+  const [imageModel, setImageModel] = useState('gemini-2.5-flash-image');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +80,7 @@ const App: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reWritePopupRef = useRef<HTMLDivElement>(null);
 
-  // Initialize API Key and Model from localStorage or defaults
+  // Initialize API Key and Models from localStorage or defaults
   useEffect(() => {
     const storedKey = localStorage.getItem('user_api_key');
     const envKey = process.env.API_KEY;
@@ -83,9 +93,14 @@ const App: React.FC = () => {
         (process as any).env.API_KEY = storedKey;
     }
 
-    const storedModel = localStorage.getItem('user_text_model');
-    if (storedModel) {
-        setTextModel(storedModel);
+    const storedTextModel = localStorage.getItem('user_text_model');
+    if (storedTextModel) {
+        setTextModel(storedTextModel);
+    }
+
+    const storedImageModel = localStorage.getItem('user_image_model');
+    if (storedImageModel) {
+        setImageModel(storedImageModel);
     }
   }, []);
 
@@ -109,10 +124,16 @@ const App: React.FC = () => {
     (process as any).env.API_KEY = '';
   };
 
-  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleTextModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value;
     setTextModel(newModel);
     localStorage.setItem('user_text_model', newModel);
+  };
+
+  const handleImageModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newModel = e.target.value;
+    setImageModel(newModel);
+    localStorage.setItem('user_image_model', newModel);
   };
 
   useEffect(() => {
@@ -461,7 +482,7 @@ const App: React.FC = () => {
         setCapturedTime(video.currentTime);
         const base64Frame = canvas.toDataURL('image/jpeg').split(',')[1];
 
-        const processedImageBase64 = await processFrameForTextExtraction(base64Frame);
+        const processedImageBase64 = await processFrameForTextExtraction(base64Frame, imageModel);
 
         const blob = await (await fetch(`data:image/png;base64,${processedImageBase64}`)).blob();
         
@@ -547,7 +568,7 @@ const App: React.FC = () => {
         // 2. AI Processing
         const base64Data = await blobToBase64(blob);
         const reWritePrompt = `Analyze the provided image and identify only the text and numbers. Ignore all other visual elements like backgrounds, logos, boxes, and colors. Then, create a new image with the following specifications: 1. The background must be a solid, uniform color: rgb(139, 195, 74). 2. Reproduce the text and numbers you identified from the original image. 3. The style for all text and numbers must be: white color with a black outline. 4. Increase the size of all text and numbers to 1.5 times their original size. 5. Position the enlarged text and numbers on the new background in a layout that is similar to the original and is aesthetically pleasing. The final output image must ONLY contain the styled text and numbers on the specified green background. Nothing else.`;
-        const editedImageBase64 = await editImage(base64Data, blob.type, reWritePrompt);
+        const editedImageBase64 = await editImage(base64Data, blob.type, reWritePrompt, imageModel);
         
         // 3. Display and prepare for download
         const newBlob = await (await fetch(`data:image/png;base64,${editedImageBase64}`)).blob();
@@ -597,7 +618,7 @@ const App: React.FC = () => {
         const blob = await response.blob();
         const base64Data = await blobToBase64(blob);
 
-        const editedImageBase64 = await editImage(base64Data, blob.type, prompt);
+        const editedImageBase64 = await editImage(base64Data, blob.type, prompt, imageModel);
 
         const newBlob = await (await fetch(`data:image/png;base64,${editedImageBase64}`)).blob();
         const newUrl = URL.createObjectURL(newBlob);
@@ -630,7 +651,7 @@ const App: React.FC = () => {
         const blob = await response.blob();
         const base64Data = await blobToBase64(blob);
 
-        const editedImageBase64 = await editImage(base64Data, blob.type, reWritePrompt);
+        const editedImageBase64 = await editImage(base64Data, blob.type, reWritePrompt, imageModel);
 
         const newBlob = await (await fetch(`data:image/png;base64,${editedImageBase64}`)).blob();
         const newUrl = URL.createObjectURL(newBlob);
@@ -755,17 +776,32 @@ const App: React.FC = () => {
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <label className="text-gray-400 whitespace-nowrap">Text Model :</label>
-                <select 
-                    value={textModel}
-                    onChange={handleModelChange}
-                    className="bg-gray-800 text-gray-300 rounded px-2 h-8 outline-none border border-gray-700 focus:border-blue-500 transition-colors font-sans text-xs"
-                >
-                    {TEXT_REASONING_MODELS.map(model => (
-                        <option key={model.id} value={model.id}>{model.name}</option>
-                    ))}
-                </select>
+              <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+                <div className="flex items-center gap-2">
+                    <label className="text-gray-400 whitespace-nowrap">Text Model :</label>
+                    <select 
+                        value={textModel}
+                        onChange={handleTextModelChange}
+                        className="bg-gray-800 text-gray-300 rounded px-2 h-8 outline-none border border-gray-700 focus:border-blue-500 transition-colors font-sans text-xs"
+                    >
+                        {TEXT_REASONING_MODELS.map(model => (
+                            <option key={model.id} value={model.id}>{model.name}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <label className="text-gray-400 whitespace-nowrap">Image Model :</label>
+                    <select 
+                        value={imageModel}
+                        onChange={handleImageModelChange}
+                        className="bg-gray-800 text-gray-300 rounded px-2 h-8 outline-none border border-gray-700 focus:border-blue-500 transition-colors font-sans text-xs"
+                    >
+                        {IMAGE_GENERATION_MODELS.map(model => (
+                            <option key={model.id} value={model.id}>{model.name}</option>
+                        ))}
+                    </select>
+                </div>
               </div>
           </div>
       </div>
