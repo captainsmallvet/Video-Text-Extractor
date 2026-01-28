@@ -1,0 +1,5 @@
+{
+  "name": "ถอดข้อความจากภาพ video",
+  "description": "An application that uses the Gemini Pro model to analyze uploaded videos, extract text from the video frames, and display it with corresponding timestamps.",
+  "requestFramePermissions": []
+}
