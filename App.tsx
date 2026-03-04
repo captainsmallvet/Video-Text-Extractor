@@ -126,7 +126,7 @@ const App: React.FC = () => {
 
   const handleClearApiKey = () => {
     localStorage.removeItem('user_api_key');
-    setApiKeyInput('no API key');
+    setApiKeyInput('');
     (process as any).env.API_KEY = '';
   };
 
