@@ -747,13 +747,13 @@ const App: React.FC = () => {
   const isPromptEditing = isEditing && quickEditLoadingKey === null;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center font-sans">
+    <div className="min-h-screen bg-gray-900 text-gray-100  items-center font-sans">
       {/* API Key and Model Management Section */}
-      <div className="w-full bg-black/40 border-b border-gray-700 p-2 text-xs font-mono sticky top-0 z-50 shadow-md">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="w-full bg-black/40 border-b border-gray-700 p-2 text-xs font-mono  shadow-md">
+          <div className="max-w-7xl mx-auto  sm:flex-row items-start sm:items-center gap-4">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <label className="text-gray-400 whitespace-nowrap">API Key :</label>
-                <div className="flex-1 sm:w-64 overflow-x-auto bg-gray-800 rounded px-2 h-8 flex items-center shadow-inner">
+                <div className="flex-1 sm:w-64 overflow-x-auto bg-gray-800 rounded px-2 h-8 flex items-center shadow-inner min-w-[600px]​">
                     <input
                         type="text"
                         value={apiKeyInput}
@@ -781,7 +781,7 @@ const App: React.FC = () => {
                     Clear
                 </button>
               </div>
-
+<br/>
               <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
                 <div className="flex items-center gap-2">
                     <label className="text-gray-400 whitespace-nowrap">Text Model :</label>
