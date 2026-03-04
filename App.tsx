@@ -29,19 +29,25 @@ const QUICK_EDIT_PROMPTS = {
 const REWRITE_SIZES = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
 
 const TEXT_REASONING_MODELS = [
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
-    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview' },
+    { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview' },
+    { id: 'gemini-3-pro-preview', name: 'Gemini 3.0 Pro Preview' },
+    { id: 'gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash Lite Preview' },
     { id: 'gemini-flash-latest', name: 'Gemini Flash Latest' },
     { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite Latest' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+    { id: 'gemini-pro-latest', name: 'Gemini Pro (Latest Stable)' },
 ];
 
 const IMAGE_GENERATION_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro Image' },
-    { id: 'gemini-flash-latest', name: 'Gemini Flash Latest' },
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
-    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
-    { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite Latest' },
+  { id: 'gemini-3.1-flash-image-preview', name: 'Gemini 3.1 Flash Image (High Quality)' },
+  { id: 'gemini-3-pro-image-preview', name: 'Gemini 3.0 Pro Image (Premium)' },
+  { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image (Standard)' },
+  { id: 'imagen-4.0-generate-001', name: 'Imagen 4.0' },
+  { id: 'gemini-flash-image-latest', name: 'Gemini Flash Image Latest' },
+  { id: 'gemini-pro-image-latest', name: 'Gemini Pro Image Latest' },
+  { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite (Fastest Stable)' },
 ];
 
 const App: React.FC = () => {
