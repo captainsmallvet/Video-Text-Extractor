@@ -72,6 +72,7 @@ const formatTimestamp = (totalSeconds: number): string => {
 export const analyzeVideoForText = async (
     videoFile: File,
     textModel: string,
+    apiKey: string,
     onProgress: (message: string, progress?: number) => void
 ): Promise<Transcription[]> => {
     onProgress('Extracting frames from video...', 0);
@@ -84,7 +85,7 @@ export const analyzeVideoForText = async (
     }
 
     onProgress(`Analyzing frames with ${textModel}...`, undefined);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const ai = new GoogleGenAI({ apiKey });
 
     const prompt = `Your task is to extract text from a sequence of video frames.
 - Focus ONLY on the text visible in the images. Ignore any audio.
@@ -145,8 +146,8 @@ const modelSupportsImageConfig = (model: string): boolean => {
   return model.includes('image') || model.includes('2.5-flash') || model.includes('3-pro');
 };
 
-export const processFrameForTextExtraction = async (base64FrameData: string, imageModel: string): Promise<string> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+export const processFrameForTextExtraction = async (base64FrameData: string, imageModel: string, apiKey: string): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey });
 
     const imagePart = {
         inlineData: {
@@ -197,9 +198,10 @@ export const editImage = async (
     base64ImageData: string,
     mimeType: string,
     prompt: string,
-    imageModel: string
+    imageModel: string,
+    apiKey: string
 ): Promise<string> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const ai = new GoogleGenAI({ apiKey });
 
     const imagePart = {
         inlineData: {

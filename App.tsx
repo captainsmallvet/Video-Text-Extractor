@@ -271,7 +271,7 @@ const App: React.FC = () => {
     setProgress({ message: 'Starting analysis...' });
     
     try {
-      const results = await analyzeVideoForText(videoFile, textModel, (message, percentage) => {
+      const results = await analyzeVideoForText(videoFile, textModel, apiKeyInput, (message, percentage) => {
         setProgress({ message, percentage });
       });
       setTranscriptions(results);
@@ -488,7 +488,7 @@ const App: React.FC = () => {
         setCapturedTime(video.currentTime);
         const base64Frame = canvas.toDataURL('image/jpeg').split(',')[1];
 
-        const processedImageBase64 = await processFrameForTextExtraction(base64Frame, imageModel);
+        const processedImageBase64 = await processFrameForTextExtraction(base64Frame, imageModel, apiKeyInput);
 
         const blob = await (await fetch(`data:image/png;base64,${processedImageBase64}`)).blob();
         
@@ -574,7 +574,7 @@ const App: React.FC = () => {
         // 2. AI Processing
         const base64Data = await blobToBase64(blob);
         const reWritePrompt = `Analyze the provided image and identify only the text and numbers. Ignore all other visual elements like backgrounds, logos, boxes, and colors. Then, create a new image with the following specifications: 1. The background must be a solid, uniform color: rgb(139, 195, 74). 2. Reproduce the text and numbers you identified from the original image. 3. The style for all text and numbers must be: white color with a black outline. 4. Increase the size of all text and numbers to 1.5 times their original size. 5. Position the enlarged text and numbers on the new background in a layout that is similar to the original and is aesthetically pleasing. The final output image must ONLY contain the styled text and numbers on the specified green background. Nothing else.`;
-        const editedImageBase64 = await editImage(base64Data, blob.type, reWritePrompt, imageModel);
+        const editedImageBase64 = await editImage(base64Data, blob.type, reWritePrompt, imageModel, apiKeyInput);
         
         // 3. Display and prepare for download
         const newBlob = await (await fetch(`data:image/png;base64,${editedImageBase64}`)).blob();
@@ -624,7 +624,7 @@ const App: React.FC = () => {
         const blob = await response.blob();
         const base64Data = await blobToBase64(blob);
 
-        const editedImageBase64 = await editImage(base64Data, blob.type, prompt, imageModel);
+        const editedImageBase64 = await editImage(base64Data, blob.type, prompt, imageModel, apiKeyInput);
 
         const newBlob = await (await fetch(`data:image/png;base64,${editedImageBase64}`)).blob();
         const newUrl = URL.createObjectURL(newBlob);
@@ -651,13 +651,13 @@ const App: React.FC = () => {
     setError(null);
 
     const reWritePrompt = `Analyze the provided image and identify only the text and numbers. Ignore all other visual elements like backgrounds, logos, boxes, and colors. Then, create a new image with the following specifications: 1. The background must be a solid, uniform color: rgb(139, 195, 74). 2. Reproduce the text and numbers you identified from the original image. 3. The style for all text and numbers must be: white color with a black outline. 4. Change the size of all text and numbers to ${size}% of their original size. 5. Position the resized text and numbers on the new background in a layout that is similar to the original and is aesthetically pleasing. The final output image must ONLY contain the styled text and numbers on the specified green background. Nothing else. Ensure all text from the original image is present and correct.`;
-
+    
     try {
         const response = await fetch(capturedFrameUrl as string);
         const blob = await response.blob();
         const base64Data = await blobToBase64(blob);
 
-        const editedImageBase64 = await editImage(base64Data, blob.type, reWritePrompt, imageModel);
+        const editedImageBase64 = await editImage(base64Data, blob.type, reWritePrompt, imageModel, apiKeyInput);
 
         const newBlob = await (await fetch(`data:image/png;base64,${editedImageBase64}`)).blob();
         const newUrl = URL.createObjectURL(newBlob);
