@@ -47,7 +47,10 @@ const IMAGE_GENERATION_MODELS = [
   { id: 'imagen-4.0-generate-001', name: 'Imagen 4.0' },
   { id: 'gemini-flash-image-latest', name: 'Gemini Flash Image Latest' },
   { id: 'gemini-pro-image-latest', name: 'Gemini Pro Image Latest' },
-  { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite (Fastest Stable)' },
+  { id: 'gemini-flash-latest', name: 'gemini-flash-latest' },
+  { id: 'gemini-flash-lite-latest', name: 'gemini-flash-lite-latest' },
+  { id: 'gemini-3-flash-preview', name: 'gemini-3-flash-preview' },
+  { id: 'gemini-3.1-pro-preview', name: 'gemini-3.1-pro-preview' },
 ];
 
 const App: React.FC = () => {
