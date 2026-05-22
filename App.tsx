@@ -29,14 +29,15 @@ const QUICK_EDIT_PROMPTS = {
 const REWRITE_SIZES = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
 
 const TEXT_REASONING_MODELS = [
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview' },
-    { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview' },
-    { id: 'gemini-3-pro-preview', name: 'Gemini 3.0 Pro Preview' },
-    { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite' },
+    { id: 'gemini-3.5-flash', name: '(20)Gemini 3.5 Flash' },
+    { id: 'gemini-3-flash-preview', name: '(20)Gemini 3 Flash Preview' },
+    { id: 'gemini-3.1-pro-preview', name: '(0)Gemini 3.1 Pro Preview' },
+    { id: 'gemini-3.1-flash-lite', name: '(500)Gemini 3.1 Flash Lite' },
     { id: 'gemini-flash-latest', name: 'Gemini Flash Latest' },
     { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite Latest' },
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
-    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+    { id: 'gemini-2.5-flash', name: '(20)Gemini 2.5 Flash' },
+    { id: 'gemini-2.5-flash-lite', name: '(20)Gemini 2.5 Flash Lite' },
+    { id: 'gemini-2.5-pro', name: '(0)Gemini 2.5 Pro' },
     { id: 'gemini-pro-latest', name: 'Gemini Pro (Latest Stable)' },
 ];
 
@@ -79,7 +80,7 @@ const App: React.FC = () => {
   const [isReWritingFromPopup, setIsReWritingFromPopup] = useState(false);
   
   const [apiKeyInput, setApiKeyInput] = useState('');
-  const [textModel, setTextModel] = useState('gemini-3-flash-preview');
+  const [textModel, setTextModel] = useState('gemini-3.5-flash');
   const [imageModel, setImageModel] = useState('gemini-2.5-flash-image');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
