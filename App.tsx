@@ -3,6 +3,7 @@ import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import type { Transcription, AppStatus } from './types';
 import { UploadIcon, VideoIcon, SparklesIcon, CopyIcon, SaveIcon, RewindIcon, ForwardIcon, ChevronsLeftIcon, ChevronsRightIcon, CameraIcon, DocumentTextIcon, PencilIcon, SpinnerIcon, FolderOpenIcon } from './components/icons';
 import { analyzeVideoForText, processFrameForTextExtraction, editImage } from './services/videoAnalyzer';
+import { fetchCentralAIModels } from './services/centralFirebase';
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -28,7 +29,7 @@ const QUICK_EDIT_PROMPTS = {
 
 const REWRITE_SIZES = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
 
-const TEXT_REASONING_MODELS = [
+const FALLBACK_TEXT_MODELS = [
     { id: 'gemini-3.5-flash', name: '(20)Gemini 3.5 Flash' },
     { id: 'gemini-3-flash-preview', name: '(20)Gemini 3 Flash Preview' },
     { id: 'gemini-3.1-pro-preview', name: '(0)Gemini 3.1 Pro Preview' },
@@ -41,7 +42,7 @@ const TEXT_REASONING_MODELS = [
     { id: 'gemini-pro-latest', name: 'Gemini Pro (Latest Stable)' },
 ];
 
-const IMAGE_GENERATION_MODELS = [
+const FALLBACK_IMAGE_MODELS = [
   { id: 'gemini-3.1-flash-image-preview', name: 'Gemini 3.1 Flash Image (High Quality)' },
   { id: 'gemini-3-pro-image-preview', name: 'Gemini 3.0 Pro Image (Premium)' },
   { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image (Standard)' },
@@ -79,6 +80,9 @@ const App: React.FC = () => {
   const [isReWritePopupOpen, setIsReWritePopupOpen] = useState(false);
   const [isReWritingFromPopup, setIsReWritingFromPopup] = useState(false);
   
+  const [textModelList, setTextModelList] = useState<{ id: string; name: string }[]>(FALLBACK_TEXT_MODELS);
+  const [imageModelList, setImageModelList] = useState<{ id: string; name: string }[]>(FALLBACK_IMAGE_MODELS);
+
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [textModel, setTextModel] = useState('gemini-3.5-flash');
   const [imageModel, setImageModel] = useState('gemini-2.5-flash-image');
@@ -90,7 +94,7 @@ const App: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reWritePopupRef = useRef<HTMLDivElement>(null);
 
-  // Initialize API Key and Models from localStorage or defaults
+  // Initialize API Key and fetch Centralized AI Models on page load
   useEffect(() => {
     const storedKey = localStorage.getItem('user_api_key');
     const envKey = process.env.API_KEY;
@@ -103,15 +107,39 @@ const App: React.FC = () => {
         (process as any).env.API_KEY = storedKey;
     }
 
-    const storedTextModel = localStorage.getItem('user_text_model');
-    if (storedTextModel) {
-        setTextModel(storedTextModel);
+    async function loadCentralModels() {
+      try {
+        const centralModels = await fetchCentralAIModels();
+
+        // Filter for Text Reasoning models
+        const textModels = centralModels.filter(m => m.normalizedCategory === 'text');
+        if (textModels.length > 0) {
+          setTextModelList(textModels.map(m => ({ id: m.id, name: m.name })));
+          
+          // Select default model for Level 2 (or first model in list)
+          const defaultText = textModels.find(m => m.isDefaultL2) || textModels[0];
+          if (defaultText) {
+            setTextModel(defaultText.id);
+          }
+        }
+
+        // Filter for Image models
+        const imageModels = centralModels.filter(m => m.normalizedCategory === 'image');
+        if (imageModels.length > 0) {
+          setImageModelList(imageModels.map(m => ({ id: m.id, name: m.name })));
+
+          // Select default model for Level 2 (or first model in list)
+          const defaultImage = imageModels.find(m => m.isDefaultL2) || imageModels[0];
+          if (defaultImage) {
+            setImageModel(defaultImage.id);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load central models, using fallbacks:", err);
+      }
     }
 
-    const storedImageModel = localStorage.getItem('user_image_model');
-    if (storedImageModel) {
-        setImageModel(storedImageModel);
-    }
+    loadCentralModels();
   }, []);
 
   const handleSendApiKey = () => {
@@ -137,13 +165,11 @@ const App: React.FC = () => {
   const handleTextModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value;
     setTextModel(newModel);
-    localStorage.setItem('user_text_model', newModel);
   };
 
   const handleImageModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value;
     setImageModel(newModel);
-    localStorage.setItem('user_image_model', newModel);
   };
 
   useEffect(() => {
@@ -794,7 +820,7 @@ const App: React.FC = () => {
                         onChange={handleTextModelChange}
                         className="bg-gray-800 text-gray-300 rounded px-2 h-8 outline-none border border-gray-700 focus:border-blue-500 transition-colors font-sans text-xs"
                     >
-                        {TEXT_REASONING_MODELS.map(model => (
+                        {textModelList.map(model => (
                             <option key={model.id} value={model.id}>{model.name}</option>
                         ))}
                     </select>
@@ -807,7 +833,7 @@ const App: React.FC = () => {
                         onChange={handleImageModelChange}
                         className="bg-gray-800 text-gray-300 rounded px-2 h-8 outline-none border border-gray-700 focus:border-blue-500 transition-colors font-sans text-xs"
                     >
-                        {IMAGE_GENERATION_MODELS.map(model => (
+                        {imageModelList.map(model => (
                             <option key={model.id} value={model.id}>{model.name}</option>
                         ))}
                     </select>
